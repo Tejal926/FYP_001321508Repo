@@ -1,0 +1,9 @@
+# Large data files (keep locally, don't push to GitHub)
+discogs_20260101_releases.xml.gz
+valid_books.json
+
+# System files
+.DS_Store
+
+# IDE
+.idea/
