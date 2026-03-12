@@ -1,11 +1,15 @@
 import os
 import time
-import random
 import pandas as pd
 import discogs_client
 from typing import List, Dict, Tuple
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Books Dataset Upload
+print("[INIT] Loading books Excel file...")
+books_file = pd.read_excel('Backup_Books.xlsx')
+print(f"[INIT] Loaded {len(books_file)} books from Backup_Books.xlsx")
 
 # Configuration
 DISCOGS_USER_TOKEN = os.getenv("DISCOGS_USER_TOKEN","TwhKkMPvpWPwyZTsRCoPHHcabLZJJYddnKxmrXne")
@@ -18,12 +22,6 @@ print("[INIT] Using Discogs token that is", "set" if DISCOGS_USER_TOKEN else "NO
 print("[INIT] Creating Discogs client...")
 d = discogs_client.Client("BookPlaylistApp/1.0", user_token=DISCOGS_USER_TOKEN)
 print("[INIT] Discogs client created:", d)
-
-
-# Books Dataset Upload
-print("[INIT] Loading books Excel file...")
-books_file = pd.read_excel('Backup_Books.xlsx')
-print(f"[INIT] Loaded {len(books_file)} books from Backup_Books.xlsx")
 
 # Sleep Section
 RATE_LIMIT_BUFFER = 2      # keep 2 requests spare
@@ -138,14 +136,12 @@ def book_commonalities(chosen_books: List[Dict]) -> None:
         print("[COMMON] Playlist is empty.")
     print("="*60)
 
-BOOK_TOPIC_TO_DISCOGS_STYLE = {"science fiction": ["Electronic", "Score"],
-                               "space opera": ["Space Rock", "Progressive Rock"],
-                               "fantasy": ["Power Metal", "Symphonic Rock"],
-                               "horror": ["Darkwave", "Goth Rock"],
-                               "dystopian": ["Industrial", "EBM"],
-                               "romance": ["Pop", "Ballad"],
-                               "historical": ["Classical"],
-                               "mystery": ["Jazz"]}
+BOOK_TOPIC_TO_DISCOGS_STYLE = {"science fiction": ["Space Rock", "Space-Age", "Synth-pop"],
+                               "fantasy": ["IDM", "EBM", "Pop Punk"], #pick better styles
+                               "horror": ["Horror Rock", "Horrorcore", "Darkwave"],
+                               "dystopian": ["Industrial", "Industrial Metal"],
+                               "goth": ["Goth Rock", "Gothic Metal", "Emo"],
+                               "mystery": ["", ""]}     #find mystery styles
 
 def pick_main_genres(global_keywords, max_genres=3):
     print("[GENRES] Selecting main genres from keywords...")
@@ -308,9 +304,6 @@ def main():
 
         print("[MAIN] All books chosen. Running commonalities + playlist generation...")
         book_commonalities(chosen_rows)
-
-        #test_release = d.release(random.randint(1000,100000))
-        #print("Test track:", test_release.tracklist[0].title, "–", test_release.artists[0].name)
 
     except Exception as e:
         print(f"[ERROR] {e}")
