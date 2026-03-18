@@ -36,25 +36,38 @@ def _respect_rate_limit(response):
         time.sleep(MIN_SLEEP_SECONDS)
 
 # Genre descriptions for smart semantic matching using TF-IDF
-GENRE_DESCRIPTIONS = {
-    "science fiction": "space alien robot future technology planet android spaceship cosmos extraterrestrial sci-fi spacecraft galaxy interstellar",
-    "cyberpunk": "cyber tech hacker dystopia corporate virtual digital network matrix artificial intelligence computer technology future",
-    "fantasy": "magic wizard dragon elf sword kingdom spell quest mythical enchanted sorcery castle medieval adventure epic",
-    "horror": "monster terror fear dark macabre nightmare haunted evil creature scary frightening terrifying supernatural gothic demon ghost",
-    "gothic": "gothic mysterious brooding decay mansion atmosphere darkness melancholy victorian romantic gloomy shadow castle",
-    "vampire": "vampire dracula blood undead night immortal fangs nocturnal bloodsucker supernatural creature darkness",
-    "dystopian": "dystopia totalitarian oppressive control surveillance regime authoritarian government society future dark oppression",
-    "post-apocalyptic": "apocalypse wasteland survival ruins collapse destroyed civilization nuclear war desolate barren end world",
-    "mystery": "mystery clue puzzle enigma secret hidden unknown detective solve investigation riddle suspense poe",
-    "thriller": "suspense tension danger chase escape threat action fast-paced adrenaline excitement dramatic",
-    "detective": "detective investigation solve crime evidence clue case murder police inspector sleuth forensic",
-    "romance": "love romance relationship passion heart desire emotion intimate affection romantic feelings couple",
-    "war": "war battle soldier combat military conflict weapon army fight violence warfare",
-    "historical": "historical history period era century past antiquity ancient medieval renaissance baroque",
-    "victorian": "victorian 19th century england british empire queen victoria london industrial era",
-    "adventure": "adventure journey expedition explore quest travel discovery voyage heroic action",
-    "philosophical": "philosophy meaning existence truth ethics morality consciousness reality metaphysics existential thought"
-}
+GENRE_DESCRIPTIONS = {"science fiction": "space alien robot future technology planet android "
+                                         "spaceship cosmos extraterrestrial sci-fi spacecraft galaxy interstellar",
+                      "cyberpunk": "cyber tech hacker dystopia corporate virtual digital network matrix "
+                                   "artificial intelligence computer technology future",
+                      "fantasy": "magic wizard dragon elf sword kingdom spell quest mythical "
+                                 "enchanted sorcery castle medieval adventure epic",
+                      "horror": "monster terror fear dark macabre nightmare haunted evil "
+                                "creature scary frightening terrifying supernatural gothic demon ghost",
+                      "gothic": "gothic mysterious brooding decay mansion atmosphere "
+                                "darkness melancholy victorian romantic gloomy shadow castle",
+                      "vampire": "vampire dracula blood undead night immortal fangs "
+                                 "nocturnal bloodsucker supernatural creature darkness",
+                      "dystopian": "dystopia totalitarian oppressive control surveillance regime "
+                                   "authoritarian government society future dark oppression",
+                      "post-apocalyptic": "apocalypse wasteland survival ruins collapse "
+                                          "destroyed civilization nuclear war desolate barren end world",
+                      "mystery": "mystery clue puzzle enigma secret hidden unknown "
+                                 "detective solve investigation riddle suspense poe",
+                      "thriller": "suspense tension danger chase escape threat action "
+                                  "fast-paced adrenaline excitement dramatic",
+                      "detective": "detective investigation solve crime evidence clue "
+                                   "case murder police inspector sleuth forensic",
+                      "romance": "love romance relationship passion heart desire "
+                                 "emotion intimate affection romantic feelings couple",
+                      "war": "war battle soldier combat military conflict weapon army fight violence warfare",
+                      "historical": "historical history period era century past antiquity "
+                                    "ancient medieval renaissance baroque",
+                      "victorian": "victorian 19th century england british empire queen victoria london industrial era",
+                      "adventure": "adventure journey expedition explore quest travel discovery voyage heroic action",
+                      "philosophical": "philosophy meaning existence truth ethics morality "
+                                       "consciousness reality metaphysics existential thought"}
+
 
 # Initialize TF-IDF vectorizer for smart genre matching
 print("[INIT] Building smart genre matcher with TF-IDF...")
@@ -63,43 +76,48 @@ genre_names = list(GENRE_DESCRIPTIONS.keys())
 genre_texts = list(GENRE_DESCRIPTIONS.values())
 genre_tfidf_matrix = genre_vectorizer.fit_transform(genre_texts)
 
-# Book genre to music style mapping
-BOOK_TOPIC_TO_DISCOGS_STYLE = {"science fiction": ["Space Rock", "Space-Age", "Synth-pop"],
-                               "space opera": ["Space Rock", "Symphonic Rock", "Prog Rock"],
-                               "cyberpunk": ["Industrial", "Synthwave", "Electro"],
-                               "fantasy": ["Power Metal", "Symphonic Rock", "Folk Metal"],
-                               "epic": ["Symphonic Metal", "Power Metal", "Prog Rock"],
-                               "mythology": ["Folk Metal", "Pagan", "Symphonic Rock"],
-                               "medieval": ["Medieval", "Folk", "Neo-Classical"],
-                               "horror": ["Horror Rock", "Horrorcore", "Darkwave"],
-                               "gothic": ["Goth Rock", "Gothic Metal", "Darkwave"],
-                               "occult": ["Occult", "Black Metal", "Dark Ambient"],
-                               "vampire": ["Gothic Metal", "Goth Rock", "Darkwave"],
-                               "dystopian": ["Industrial", "Industrial Metal", "EBM"],
-                               "post-apocalyptic": ["Industrial Metal", "Doom Metal", "Sludge Metal"],
-                               "political": ["Political", "Punk", "Hardcore"],
-                               "mystery": ["Jazz", "Score", "Soundtrack"],
-                               "thriller": ["Soundtrack", "Score", "Dark Jazz"],
-                               "detective": ["Jazz", "Cool Jazz", "Lounge"],
-                               "noir": ["Jazz", "Dark Jazz", "Lounge"],
-                               "historical": ["Classical", "Baroque", "Opera"],
-                               "war": ["Military", "Marches", "Symphonic Metal"],
-                               "victorian": ["Baroque", "Classical", "Opera"],
-                               "ancient": ["Classical", "Medieval", "Renaissance"],
-                               "adventure": ["Symphonic Rock", "Score", "Soundtrack"],
-                               "pirate": ["Sea Shanties", "Folk Rock", "Punk"],
-                               "western": ["Country", "Folk", "Americana"],
-                               "romance": ["Romantic", "Ballad", "Soft Rock"],
-                               "heartbreak": ["Emo", "Indie Rock", "Ballad"],
-                               "spiritual": ["New Age", "Ambient", "Drone"],
-                               "religious": ["Religious", "Gospel", "Choral"],
-                               "mystical": ["Ethereal", "Dark Ambient", "Drone"],
-                               "literary": ["Art Rock", "Prog Rock", "Chamber Music"],
-                               "satire": ["Parody", "Comedy", "Punk"],
-                               "coming of age": ["Indie Rock", "Emo", "Pop Punk"],
-                               "psychological": ["Experimental", "Abstract", "Avant-garde"],
-                               "surreal": ["Psychedelic", "Experimental", "Abstract"],
-                               "philosophical": ["Prog Rock", "Art Rock", "Avant-garde Jazz"]}
+# Top Discogs styles with popularity weights (release count from Discogs database)
+# Using top 100 most popular styles for better API results
+DISCOGS_STYLES = [
+    ("Pop Rock", 1042142), ("House", 813585), ("Experimental", 717705), ("Punk", 672562),
+    ("Alternative Rock", 614477), ("Synth-pop", 597472), ("Techno", 571029), ("Indie Rock", 520209),
+    ("Ambient", 515334), ("Hardcore", 492900), ("Disco", 489021), ("Folk", 485692),
+    ("Country", 438996), ("Hard Rock", 427196), ("Electro", 392993), ("Rock & Roll", 374018),
+    ("Romantic", 346223), ("Trance", 338347), ("Heavy Metal", 333457), ("Psychedelic Rock", 328506),
+    ("Soundtrack", 309170), ("Folk Rock", 307722), ("Downtempo", 301363), ("Noise", 290934),
+    ("Prog Rock", 280582), ("Funk", 271145), ("Classic Rock", 266524), ("Black Metal", 265272),
+    ("Blues Rock", 234625), ("New Wave", 227497), ("Industrial", 226871), ("Classical", 222847),
+    ("Death Metal", 222009), ("Drum n Bass", 209110), ("Soft Rock", 194414), ("Garage Rock", 185112),
+    ("Abstract", 182680), ("Gospel", 175742), ("Baroque", 157974), ("Acoustic", 156558),
+    ("Thrash", 154127), ("Modern", 153749), ("Swing", 147928), ("Indie Pop", 142276),
+    ("Drone", 133289), ("Dub", 133188), ("Opera", 120698), ("IDM", 110574),
+    ("Breakbeat", 130767), ("Post-Punk", 103222), ("Dark Ambient", 102363), ("Art Rock", 102070),
+    ("Fusion", 100340), ("Reggae", 100291), ("Doom Metal", 97592), ("Religious", 97192),
+    ("Avantgarde", 91796), ("Score", 85993), ("Rockabilly", 85538), ("Comedy", 85016),
+    ("Jazz-Funk", 85001), ("Lo-Fi", 84202), ("Grindcore", 79863), ("Leftfield", 77134),
+    ("Ska", 76401), ("Post Rock", 76395), ("Spoken Word", 75483), ("Psy-Trance", 74756),
+    ("Power Pop", 74080), ("Dubstep", 73344), ("Glam", 73295), ("New Age", 73090),
+    ("Hip Hop", 70052), ("Goth Rock", 69597), ("Modern Classical", 69016), ("Jazz-Rock", 67057),
+    ("Emo", 66307), ("Choral", 65543), ("Free Improvisation", 64715), ("Musical", 62099),
+    ("Trip Hop", 61134), ("Stoner Rock", 60022), ("EBM", 58677), ("Shoegaze", 58472),
+    ("Jungle", 55560), ("Synthwave", 54361), ("Hard Bop", 54118), ("Tango", 53686),
+    ("Free Jazz", 53327), ("Trap", 53264), ("Darkwave", 51484), ("Cool Jazz", 50077),
+    ("Vaporwave", 49738), ("Bluegrass", 49594), ("Metalcore", 49421), ("Laïkó", 49071),
+    ("UK Garage", 47020), ("Novelty", 45324), ("Smooth Jazz", 45216), ("Grunge", 44678),
+    ("Progressive Metal", 44646), ("Flamenco", 44066), ("AOR", 42756), ("Nu Metal", 40776),
+    ("Boom Bap", 40668), ("Symphonic Rock", 38661), ("Power Metal", 35401), ("Space Rock", 34024),
+    ("Bossa Nova", 33746), ("Krautrock", 33601), ("Post-Hardcore", 33439), ("Speed Metal", 32109),
+    ("Neo-Classical", 31861), ("Breakcore", 31725), ("Avant-garde Jazz", 31232), ("Power Electronics", 30425),
+    ("Horrorcore", 12332), ("Horror Rock", 5669), ("Gothic Metal", 18796)
+]
+
+# Initialize TF-IDF vectorizer for genre-to-music-style matching using style names
+print("[INIT] Building smart genre-to-music-style matcher with TF-IDF...")
+style_vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), min_df=1)
+style_names = [style for style, _ in DISCOGS_STYLES]
+style_popularity = {style: count for style, count in DISCOGS_STYLES}
+# Use style names themselves as the corpus for semantic matching
+style_tfidf_matrix = style_vectorizer.fit_transform(style_names)
 
 def build_book_corpus(chosen_books: List[Dict]) -> Tuple[List[str], List[str]]:
     # Build text corpus from books (title + synopsis + subjects).
@@ -116,7 +134,7 @@ def build_book_corpus(chosen_books: List[Dict]) -> Tuple[List[str], List[str]]:
     return titles, corpus
 
 def pick_main_genres(global_keywords, max_genres=3, similarity_threshold=0.1):
-    """Use TF-IDF cosine similarity to match keywords to genres intelligently."""
+    # Use TF-IDF cosine similarity to match keywords to genres intelligently.
     print(f"\n[GENRES] Analyzing {len(global_keywords)} keywords with semantic matching...")
     genre_scores = {}
 
@@ -141,7 +159,7 @@ def pick_main_genres(global_keywords, max_genres=3, similarity_threshold=0.1):
         except:
             # Fallback: exact match
             k = kw.lower()
-            for genre in BOOK_TOPIC_TO_DISCOGS_STYLE.keys():
+            for genre in genre_names:
                 if genre in k or k in genre:
                     if genre not in genre_scores:
                         genre_scores[genre] = []
@@ -194,13 +212,53 @@ def _tracks_from_releases(results, genre, max_tracks=200):
             continue
     return tracks
 
+def map_genre_to_music_styles(genre: str, max_styles=3, similarity_threshold=0.05):
+    """Use TF-IDF cosine similarity + popularity weighting to map book genre to Discogs music styles."""
+    import math
+    try:
+        # Get genre description from GENRE_DESCRIPTIONS
+        genre_desc = GENRE_DESCRIPTIONS.get(genre, genre)
+        genre_vector = style_vectorizer.transform([genre_desc])
+
+        # Compute cosine similarity with all music styles
+        similarities = cosine_similarity(genre_vector, style_tfidf_matrix)[0]
+
+        # Weight by both semantic similarity AND popularity (log scale to avoid overwhelming)
+        weighted_scores = []
+        for idx, sim in enumerate(similarities):
+            if sim > similarity_threshold:
+                style = style_names[idx]
+                popularity = style_popularity[style]
+                # Combine semantic similarity with log-scaled popularity
+                popularity_weight = math.log10(popularity + 1) / 7.0  # Normalize to ~0-1 range
+                combined_score = (sim * 0.7) + (popularity_weight * 0.3)  # 70% semantic, 30% popularity
+                weighted_scores.append((style, sim, combined_score))
+
+        # Sort by combined score
+        weighted_scores.sort(key=lambda x: x[2], reverse=True)
+
+        matched_styles = [style for style, _, _ in weighted_scores[:max_styles]]
+
+        if matched_styles:
+            print(f"  Genre '{genre}' → Styles:")
+            for style, sim, combined in weighted_scores[:max_styles]:
+                print(f"    {style} (semantic: {sim:.2f}, combined: {combined:.2f})")
+
+        return matched_styles
+    except Exception as e:
+        print(f"  Warning: Style matching failed ({e}), trying fallback")
+        return []
+
 def search_discogs_tracks_for_genre(genre: str, limit: int = 5):
-    # Search Discogs for tracks by music style.
+    # Search Discogs for tracks by music style using smart TF-IDF matching.
     print(f"\n[DISCOGS] Searching '{genre}'...")
-    style = BOOK_TOPIC_TO_DISCOGS_STYLE.get(genre, [None])[0]
+    matched_styles = map_genre_to_music_styles(genre, max_styles=3)
     tracks = []
 
-    if style:
+    # Try each matched style
+    for style in matched_styles:
+        if tracks:
+            break
         print(f"  Using style: {style}")
         time.sleep(2.0)
         results = d.search(type="release", style=style, per_page=limit, page=1)
@@ -286,6 +344,11 @@ def book_commonalities(chosen_books: List[Dict]) -> None:
     else:
         print("No tracks found.")
     print("="*60)
+
+def eval():
+    # compare the songs to each other for the evaluation
+    pass
+
 
 def main():
     try:
