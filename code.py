@@ -76,7 +76,7 @@ genre_names = list(GENRE_DESCRIPTIONS.keys())
 genre_texts = list(GENRE_DESCRIPTIONS.values())
 genre_tfidf_matrix = genre_vectorizer.fit_transform(genre_texts)
 
-# Top Discogs styles with popularity weights (release count from Discogs database)
+# Top Discogs styles with popularity weights (release count from the Discogs database)
 DISCOGS_STYLES = [("Pop Rock", 1042142), ("House", 813585), ("Experimental", 717705), ("Punk", 672562),
                   ("Alternative Rock", 614477), ("Synth-pop", 597472), ("Techno", 571029), ("Indie Rock", 520209),
                   ("Ambient", 515334), ("Hardcore", 492900), ("Disco", 489021), ("Folk", 485692),
