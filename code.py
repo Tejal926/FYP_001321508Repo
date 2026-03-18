@@ -76,8 +76,8 @@ genre_names = list(GENRE_DESCRIPTIONS.keys())
 genre_texts = list(GENRE_DESCRIPTIONS.values())
 genre_tfidf_matrix = genre_vectorizer.fit_transform(genre_texts)
 
-# Top Discogs styles with popularity weights (release count from Discogs database)
-# Using top 100 most popular styles for better API results
+# Top Discogs styles with popularity weights (release count from the Discogs database)
+# Using the top 100 most popular styles for better API results
 DISCOGS_STYLES = [
     ("Pop Rock", 1042142), ("House", 813585), ("Experimental", 717705), ("Punk", 672562),
     ("Alternative Rock", 614477), ("Synth-pop", 597472), ("Techno", 571029), ("Indie Rock", 520209),
@@ -213,7 +213,7 @@ def _tracks_from_releases(results, genre, max_tracks=200):
     return tracks
 
 def map_genre_to_music_styles(genre: str, max_styles=3, similarity_threshold=0.05):
-    """Use TF-IDF cosine similarity + popularity weighting to map book genre to Discogs music styles."""
+    # Use TF-IDF, popularity weighting, and Discogs API validation to map book genre to music styles.
     import math
     try:
         # Get genre description from GENRE_DESCRIPTIONS
@@ -237,14 +237,43 @@ def map_genre_to_music_styles(genre: str, max_styles=3, similarity_threshold=0.0
         # Sort by combined score
         weighted_scores.sort(key=lambda x: x[2], reverse=True)
 
-        matched_styles = [style for style, _, _ in weighted_scores[:max_styles]]
+        # Get top candidates for API validation
+        candidates = weighted_scores[:max_styles * 2]  # Get extra candidates for validation
 
-        if matched_styles:
-            print(f"  Genre '{genre}' → Styles:")
-            for style, sim, combined in weighted_scores[:max_styles]:
-                print(f"    {style} (semantic: {sim:.2f}, combined: {combined:.2f})")
+        if candidates:
+            print(f"  Genre '{genre}' → Testing styles with Discogs API:")
+            validated_styles = []
 
-        return matched_styles
+            # Validate styles by checking if they return results from Discogs API
+            for style, sim, combined in candidates:
+                if len(validated_styles) >= max_styles:
+                    break
+
+                try:
+                    # Quick API check to see if this style returns any results
+                    time.sleep(MIN_SLEEP_SECONDS)
+                    test_results = d.search(type="release", style=style, per_page=1, page=1)
+                    _respect_rate_limit(test_results)
+
+                    # Check if we got any results
+                    result_count = len(test_results.page(1)) if hasattr(test_results, 'page') else 0
+
+                    if result_count > 0:
+                        validated_styles.append(style)
+                        print(f"    ✓ {style} (semantic: {sim:.2f}, combined: {combined:.2f})")
+                    else:
+                        print(f"    ✗ {style} (no results)")
+                except Exception as e:
+                    print(f"    ✗ {style} (API error)")
+                    continue
+
+            if not validated_styles:
+                print(f"  Warning: No styles validated, using top semantic matches")
+                validated_styles = [style for style, _, _ in weighted_scores[:max_styles]]
+
+            return validated_styles
+
+        return []
     except Exception as e:
         print(f"  Warning: Style matching failed ({e}), trying fallback")
         return []
