@@ -35,26 +35,33 @@ def _respect_rate_limit(response):
     else:
         time.sleep(MIN_SLEEP_SECONDS)
 
-# Genre theme words for smart matching
-GENRE_THEMES = {
-    "science fiction": ["space", "alien", "robot", "future", "technology", "sci-fi", "planet", "android"],
-    "cyberpunk": ["cyber", "tech", "hacker", "dystopia", "corporate", "virtual", "digital"],
-    "fantasy": ["magic", "wizard", "dragon", "elf", "sword", "kingdom", "spell", "quest"],
-    "horror": ["monster", "terror", "fear", "dark", "macabre", "nightmare", "haunted", "evil", "creature"],
-    "gothic": ["gothic", "mysterious", "brooding", "decay", "mansion", "atmosphere"],
-    "vampire": ["vampire", "dracula", "blood", "undead", "night"],
-    "dystopian": ["dystopia", "totalitarian", "oppressive", "control", "surveillance", "regime"],
-    "post-apocalyptic": ["apocalypse", "wasteland", "survival", "ruins", "collapse"],
-    "mystery": ["mystery", "clue", "puzzle", "enigma", "secret", "hidden", "poe"],
-    "thriller": ["suspense", "tension", "danger", "chase", "escape", "threat"],
-    "detective": ["detective", "investigation", "solve", "crime", "evidence"],
-    "romance": ["love", "romance", "relationship", "passion", "heart"],
-    "war": ["war", "battle", "soldier", "combat", "military", "conflict"],
-    "historical": ["historical", "history", "period", "era", "century"],
-    "victorian": ["victorian", "19th century", "england"],
-    "adventure": ["adventure", "journey", "expedition", "explore"],
-    "philosophical": ["philosophy", "meaning", "existence", "truth"]}
+# Genre descriptions for smart semantic matching using TF-IDF
+GENRE_DESCRIPTIONS = {
+    "science fiction": "space alien robot future technology planet android spaceship cosmos extraterrestrial sci-fi spacecraft galaxy interstellar",
+    "cyberpunk": "cyber tech hacker dystopia corporate virtual digital network matrix artificial intelligence computer technology future",
+    "fantasy": "magic wizard dragon elf sword kingdom spell quest mythical enchanted sorcery castle medieval adventure epic",
+    "horror": "monster terror fear dark macabre nightmare haunted evil creature scary frightening terrifying supernatural gothic demon ghost",
+    "gothic": "gothic mysterious brooding decay mansion atmosphere darkness melancholy victorian romantic gloomy shadow castle",
+    "vampire": "vampire dracula blood undead night immortal fangs nocturnal bloodsucker supernatural creature darkness",
+    "dystopian": "dystopia totalitarian oppressive control surveillance regime authoritarian government society future dark oppression",
+    "post-apocalyptic": "apocalypse wasteland survival ruins collapse destroyed civilization nuclear war desolate barren end world",
+    "mystery": "mystery clue puzzle enigma secret hidden unknown detective solve investigation riddle suspense poe",
+    "thriller": "suspense tension danger chase escape threat action fast-paced adrenaline excitement dramatic",
+    "detective": "detective investigation solve crime evidence clue case murder police inspector sleuth forensic",
+    "romance": "love romance relationship passion heart desire emotion intimate affection romantic feelings couple",
+    "war": "war battle soldier combat military conflict weapon army fight violence warfare",
+    "historical": "historical history period era century past antiquity ancient medieval renaissance baroque",
+    "victorian": "victorian 19th century england british empire queen victoria london industrial era",
+    "adventure": "adventure journey expedition explore quest travel discovery voyage heroic action",
+    "philosophical": "philosophy meaning existence truth ethics morality consciousness reality metaphysics existential thought"
+}
 
+# Initialize TF-IDF vectorizer for smart genre matching
+print("[INIT] Building smart genre matcher with TF-IDF...")
+genre_vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
+genre_names = list(GENRE_DESCRIPTIONS.keys())
+genre_texts = list(GENRE_DESCRIPTIONS.values())
+genre_tfidf_matrix = genre_vectorizer.fit_transform(genre_texts)
 
 # Book genre to music style mapping
 BOOK_TOPIC_TO_DISCOGS_STYLE = {"science fiction": ["Space Rock", "Space-Age", "Synth-pop"],
@@ -108,43 +115,53 @@ def build_book_corpus(chosen_books: List[Dict]) -> Tuple[List[str], List[str]]:
         corpus.append(text)
     return titles, corpus
 
-def pick_main_genres(global_keywords, max_genres=3):
-    # Match keywords to genres and rank by confidence.
-    print(f"\n[GENRES] Analyzing {len(global_keywords)} keywords...")
+def pick_main_genres(global_keywords, max_genres=3, similarity_threshold=0.1):
+    """Use TF-IDF cosine similarity to match keywords to genres intelligently."""
+    print(f"\n[GENRES] Analyzing {len(global_keywords)} keywords with semantic matching...")
     genre_scores = {}
 
     for kw, kw_score in global_keywords:
-        k = kw.lower()
-        # Check theme word matches
-        for genre, theme_words in GENRE_THEMES.items():
-            if k in theme_words or any(theme in k for theme in theme_words):
-                if genre not in genre_scores:
-                    genre_scores[genre] = []
-                genre_scores[genre].append((kw, kw_score))
-                print(f"  '{kw}' -> {genre}")
-                break
-        else:
-            # Exact genre name match
+        # Transform keyword using the same vectorizer
+        try:
+            kw_vector = genre_vectorizer.transform([kw])
+
+            # Compute cosine similarity with all genres
+            similarities = cosine_similarity(kw_vector, genre_tfidf_matrix)[0]
+
+            # Find genres above the threshold
+            for idx, sim_score in enumerate(similarities):
+                if sim_score > similarity_threshold:
+                    genre = genre_names[idx]
+                    if genre not in genre_scores:
+                        genre_scores[genre] = []
+                    # Weight by both keyword importance and semantic similarity
+                    weighted_score = kw_score * sim_score
+                    genre_scores[genre].append((kw, weighted_score, sim_score))
+                    print(f"  '{kw}' -> {genre} (similarity: {sim_score:.2f})")
+        except:
+            # Fallback: exact match
+            k = kw.lower()
             for genre in BOOK_TOPIC_TO_DISCOGS_STYLE.keys():
                 if genre in k or k in genre:
                     if genre not in genre_scores:
                         genre_scores[genre] = []
-                    genre_scores[genre].append((kw, kw_score))
-                    print(f"  '{kw}' -> {genre}")
+                    genre_scores[genre].append((kw, kw_score, 1.0))
+                    print(f"  '{kw}' -> {genre} (exact match)")
                     break
 
     if not genre_scores:
         print("  WARNING: No matches! Using fallback 'fantasy'")
         return ["fantasy"]
 
-    # Rank by confidence (sum of keyword scores)
-    genre_confidence = {g: sum(s for _, s in m) for g, m in genre_scores.items()}
+    # Rank by confidence (sum of weighted scores)
+    genre_confidence = {g: sum(s for _, s, _ in m) for g, m in genre_scores.items()}
     sorted_genres = sorted(genre_confidence.items(), key=lambda x: x[1], reverse=True)
 
     print("\n[GENRES] Top matches:")
     for genre, confidence in sorted_genres[:max_genres]:
-        keywords = [kw for kw, _ in genre_scores[genre]]
-        print(f"  {genre}: {confidence:.2f} ({', '.join(keywords)})")
+        keywords = [f"{kw} ({sim:.2f})" for kw, _, sim in genre_scores[genre]]
+        print(f"  {genre}: {confidence:.2f}")
+        print(f"    Keywords: {', '.join(keywords)}")
 
     return [genre for genre, _ in sorted_genres[:max_genres]]
 
