@@ -76,47 +76,43 @@ genre_names = list(GENRE_DESCRIPTIONS.keys())
 genre_texts = list(GENRE_DESCRIPTIONS.values())
 genre_tfidf_matrix = genre_vectorizer.fit_transform(genre_texts)
 
-# Top Discogs styles with popularity weights (release count from the Discogs database)
-# Using the top 100 most popular styles for better API results
-DISCOGS_STYLES = [
-    ("Pop Rock", 1042142), ("House", 813585), ("Experimental", 717705), ("Punk", 672562),
-    ("Alternative Rock", 614477), ("Synth-pop", 597472), ("Techno", 571029), ("Indie Rock", 520209),
-    ("Ambient", 515334), ("Hardcore", 492900), ("Disco", 489021), ("Folk", 485692),
-    ("Country", 438996), ("Hard Rock", 427196), ("Electro", 392993), ("Rock & Roll", 374018),
-    ("Romantic", 346223), ("Trance", 338347), ("Heavy Metal", 333457), ("Psychedelic Rock", 328506),
-    ("Soundtrack", 309170), ("Folk Rock", 307722), ("Downtempo", 301363), ("Noise", 290934),
-    ("Prog Rock", 280582), ("Funk", 271145), ("Classic Rock", 266524), ("Black Metal", 265272),
-    ("Blues Rock", 234625), ("New Wave", 227497), ("Industrial", 226871), ("Classical", 222847),
-    ("Death Metal", 222009), ("Drum n Bass", 209110), ("Soft Rock", 194414), ("Garage Rock", 185112),
-    ("Abstract", 182680), ("Gospel", 175742), ("Baroque", 157974), ("Acoustic", 156558),
-    ("Thrash", 154127), ("Modern", 153749), ("Swing", 147928), ("Indie Pop", 142276),
-    ("Drone", 133289), ("Dub", 133188), ("Opera", 120698), ("IDM", 110574),
-    ("Breakbeat", 130767), ("Post-Punk", 103222), ("Dark Ambient", 102363), ("Art Rock", 102070),
-    ("Fusion", 100340), ("Reggae", 100291), ("Doom Metal", 97592), ("Religious", 97192),
-    ("Avantgarde", 91796), ("Score", 85993), ("Rockabilly", 85538), ("Comedy", 85016),
-    ("Jazz-Funk", 85001), ("Lo-Fi", 84202), ("Grindcore", 79863), ("Leftfield", 77134),
-    ("Ska", 76401), ("Post Rock", 76395), ("Spoken Word", 75483), ("Psy-Trance", 74756),
-    ("Power Pop", 74080), ("Dubstep", 73344), ("Glam", 73295), ("New Age", 73090),
-    ("Hip Hop", 70052), ("Goth Rock", 69597), ("Modern Classical", 69016), ("Jazz-Rock", 67057),
-    ("Emo", 66307), ("Choral", 65543), ("Free Improvisation", 64715), ("Musical", 62099),
-    ("Trip Hop", 61134), ("Stoner Rock", 60022), ("EBM", 58677), ("Shoegaze", 58472),
-    ("Jungle", 55560), ("Synthwave", 54361), ("Hard Bop", 54118), ("Tango", 53686),
-    ("Free Jazz", 53327), ("Trap", 53264), ("Darkwave", 51484), ("Cool Jazz", 50077),
-    ("Vaporwave", 49738), ("Bluegrass", 49594), ("Metalcore", 49421), ("Laïkó", 49071),
-    ("UK Garage", 47020), ("Novelty", 45324), ("Smooth Jazz", 45216), ("Grunge", 44678),
-    ("Progressive Metal", 44646), ("Flamenco", 44066), ("AOR", 42756), ("Nu Metal", 40776),
-    ("Boom Bap", 40668), ("Symphonic Rock", 38661), ("Power Metal", 35401), ("Space Rock", 34024),
-    ("Bossa Nova", 33746), ("Krautrock", 33601), ("Post-Hardcore", 33439), ("Speed Metal", 32109),
-    ("Neo-Classical", 31861), ("Breakcore", 31725), ("Avant-garde Jazz", 31232), ("Power Electronics", 30425),
-    ("Horrorcore", 12332), ("Horror Rock", 5669), ("Gothic Metal", 18796)
-]
+# Top Discogs styles with popularity weights (release count from Discogs database)
+DISCOGS_STYLES = [("Pop Rock", 1042142), ("House", 813585), ("Experimental", 717705), ("Punk", 672562),
+                  ("Alternative Rock", 614477), ("Synth-pop", 597472), ("Techno", 571029), ("Indie Rock", 520209),
+                  ("Ambient", 515334), ("Hardcore", 492900), ("Disco", 489021), ("Folk", 485692),
+                  ("Country", 438996), ("Hard Rock", 427196), ("Electro", 392993), ("Rock & Roll", 374018),
+                  ("Romantic", 346223), ("Trance", 338347), ("Heavy Metal", 333457), ("Psychedelic Rock", 328506),
+                  ("Soundtrack", 309170), ("Folk Rock", 307722), ("Downtempo", 301363), ("Noise", 290934),
+                  ("Prog Rock", 280582), ("Funk", 271145), ("Classic Rock", 266524), ("Black Metal", 265272),
+                  ("Blues Rock", 234625), ("New Wave", 227497), ("Industrial", 226871), ("Classical", 222847),
+                  ("Death Metal", 222009), ("Drum n Bass", 209110), ("Soft Rock", 194414), ("Garage Rock", 185112),
+                  ("Abstract", 182680), ("Gospel", 175742), ("Baroque", 157974), ("Acoustic", 156558),
+                  ("Thrash", 154127), ("Modern", 153749), ("Swing", 147928), ("Indie Pop", 142276),
+                  ("Drone", 133289), ("Dub", 133188), ("Opera", 120698), ("IDM", 110574),
+                  ("Breakbeat", 130767), ("Post-Punk", 103222), ("Dark Ambient", 102363), ("Art Rock", 102070),
+                  ("Fusion", 100340), ("Reggae", 100291), ("Doom Metal", 97592), ("Religious", 97192),
+                  ("Avantgarde", 91796), ("Score", 85993), ("Rockabilly", 85538), ("Comedy", 85016),
+                  ("Jazz-Funk", 85001), ("Lo-Fi", 84202), ("Grindcore", 79863), ("Leftfield", 77134),
+                  ("Ska", 76401), ("Post Rock", 76395), ("Spoken Word", 75483), ("Psy-Trance", 74756),
+                  ("Power Pop", 74080), ("Dubstep", 73344), ("Glam", 73295), ("New Age", 73090),
+                  ("Hip Hop", 70052), ("Goth Rock", 69597), ("Modern Classical", 69016), ("Jazz-Rock", 67057),
+                  ("Emo", 66307), ("Choral", 65543), ("Free Improvisation", 64715), ("Musical", 62099),
+                  ("Trip Hop", 61134), ("Stoner Rock", 60022), ("EBM", 58677), ("Shoegaze", 58472),
+                  ("Jungle", 55560), ("Synthwave", 54361), ("Hard Bop", 54118), ("Tango", 53686),
+                  ("Free Jazz", 53327), ("Trap", 53264), ("Darkwave", 51484), ("Cool Jazz", 50077),
+                  ("Vaporwave", 49738), ("Bluegrass", 49594), ("Metalcore", 49421), ("Laïkó", 49071),
+                  ("UK Garage", 47020), ("Novelty", 45324), ("Smooth Jazz", 45216), ("Grunge", 44678),
+                  ("Progressive Metal", 44646), ("Flamenco", 44066), ("AOR", 42756), ("Nu Metal", 40776),
+                  ("Boom Bap", 40668), ("Symphonic Rock", 38661), ("Power Metal", 35401), ("Space Rock", 34024),
+                  ("Bossa Nova", 33746), ("Krautrock", 33601), ("Post-Hardcore", 33439), ("Speed Metal", 32109),
+                  ("Neo-Classical", 31861), ("Breakcore", 31725), ("Avant-garde Jazz", 31232),
+                  ("Power Electronics", 30425), ("Horrorcore", 12332), ("Horror Rock", 5669), ("Gothic Metal", 18796)]
 
-# Initialize TF-IDF vectorizer for genre-to-music-style matching using style names
-print("[INIT] Building smart genre-to-music-style matcher with TF-IDF...")
+# Initialize TF-IDF vectorizer for genre-to-music-style matching
+print("[INIT] Building genre-to-style matcher with TF-IDF...")
 style_vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), min_df=1)
 style_names = [style for style, _ in DISCOGS_STYLES]
 style_popularity = {style: count for style, count in DISCOGS_STYLES}
-# Use style names themselves as the corpus for semantic matching
 style_tfidf_matrix = style_vectorizer.fit_transform(style_names)
 
 def build_book_corpus(chosen_books: List[Dict]) -> Tuple[List[str], List[str]]:
@@ -213,70 +209,50 @@ def _tracks_from_releases(results, genre, max_tracks=200):
     return tracks
 
 def map_genre_to_music_styles(genre: str, max_styles=3, similarity_threshold=0.05):
-    # Use TF-IDF, popularity weighting, and Discogs API validation to map book genre to music styles.
+    # Map book genre to Discogs music styles using TF-IDF, popularity weighting, and API validation.
     import math
-    try:
-        # Get genre description from GENRE_DESCRIPTIONS
-        genre_desc = GENRE_DESCRIPTIONS.get(genre, genre)
-        genre_vector = style_vectorizer.transform([genre_desc])
+    genre_desc = GENRE_DESCRIPTIONS.get(genre, genre)
+    genre_vector = style_vectorizer.transform([genre_desc])
+    similarities = cosine_similarity(genre_vector, style_tfidf_matrix)[0]
 
-        # Compute cosine similarity with all music styles
-        similarities = cosine_similarity(genre_vector, style_tfidf_matrix)[0]
+    # Weight by semantic similarity (70%) and popularity (30%)
+    weighted_scores = []
+    for idx, sim in enumerate(similarities):
+        if sim > similarity_threshold:
+            style = style_names[idx]
+            popularity_weight = math.log10(style_popularity[style] + 1) / 7.0
+            combined_score = (sim * 0.7) + (popularity_weight * 0.3)
+            weighted_scores.append((style, sim, combined_score))
 
-        # Weight by both semantic similarity AND popularity (log scale to avoid overwhelming)
-        weighted_scores = []
-        for idx, sim in enumerate(similarities):
-            if sim > similarity_threshold:
-                style = style_names[idx]
-                popularity = style_popularity[style]
-                # Combine semantic similarity with log-scaled popularity
-                popularity_weight = math.log10(popularity + 1) / 7.0  # Normalize to ~0-1 range
-                combined_score = (sim * 0.7) + (popularity_weight * 0.3)  # 70% semantic, 30% popularity
-                weighted_scores.append((style, sim, combined_score))
+    weighted_scores.sort(key=lambda x: x[2], reverse=True)
+    candidates = weighted_scores[:max_styles * 2]
 
-        # Sort by combined score
-        weighted_scores.sort(key=lambda x: x[2], reverse=True)
-
-        # Get top candidates for API validation
-        candidates = weighted_scores[:max_styles * 2]  # Get extra candidates for validation
-
-        if candidates:
-            print(f"  Genre '{genre}' → Testing styles with Discogs API:")
-            validated_styles = []
-
-            # Validate styles by checking if they return results from Discogs API
-            for style, sim, combined in candidates:
-                if len(validated_styles) >= max_styles:
-                    break
-
-                try:
-                    # Quick API check to see if this style returns any results
-                    time.sleep(MIN_SLEEP_SECONDS)
-                    test_results = d.search(type="release", style=style, per_page=1, page=1)
-                    _respect_rate_limit(test_results)
-
-                    # Check if we got any results
-                    result_count = len(test_results.page(1)) if hasattr(test_results, 'page') else 0
-
-                    if result_count > 0:
-                        validated_styles.append(style)
-                        print(f"    ✓ {style} (semantic: {sim:.2f}, combined: {combined:.2f})")
-                    else:
-                        print(f"    ✗ {style} (no results)")
-                except Exception as e:
-                    print(f"    ✗ {style} (API error)")
-                    continue
-
-            if not validated_styles:
-                print(f"  Warning: No styles validated, using top semantic matches")
-                validated_styles = [style for style, _, _ in weighted_scores[:max_styles]]
-
-            return validated_styles
-
+    if not candidates:
         return []
-    except Exception as e:
-        print(f"  Warning: Style matching failed ({e}), trying fallback")
-        return []
+
+    print(f"  Genre '{genre}' → Testing styles with Discogs API:")
+    validated_styles = []
+
+    # Validate styles by checking if they return results from Discogs API
+    for style, sim, combined in candidates:
+        if len(validated_styles) >= max_styles:
+            break
+        try:
+            time.sleep(MIN_SLEEP_SECONDS)
+            test_results = d.search(type="release", style=style, per_page=1, page=1)
+            _respect_rate_limit(test_results)
+            result_count = len(test_results.page(1)) if hasattr(test_results, 'page') else 0
+
+            if result_count > 0:
+                validated_styles.append(style)
+                print(f"    ✓ {style} (semantic: {sim:.2f}, combined: {combined:.2f})")
+        except:
+            continue
+
+    if not validated_styles:
+        validated_styles = [style for style, _, _ in weighted_scores[:max_styles]]
+
+    return validated_styles
 
 def search_discogs_tracks_for_genre(genre: str, limit: int = 5):
     # Search Discogs for tracks by music style using smart TF-IDF matching.
