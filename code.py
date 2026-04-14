@@ -3,8 +3,10 @@ import time
 import json
 import math
 import pandas as pd
+import numpy as np
 import discogs_client
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Set
+from collections import Counter
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -317,6 +319,183 @@ def build_playlist_from_commonalities(global_keywords, total_tracks: int = 15):
 
     return playlist[:total_tracks]
 
+def calculate_intra_list_diversity(playlist: List[Dict]) -> Dict[str, float]:
+    # Calculate diversity metrics for the playlist.
+    if not playlist:
+        return {"artist_diversity": 0.0, "style_diversity": 0.0, "genre_diversity": 0.0}
+
+    artists = [track['artist'] for track in playlist]
+    unique_artists = len(set(artists))
+    artist_diversity = unique_artists / len(playlist) if playlist else 0.0
+
+    genres = [track['reason'] for track in playlist]
+    unique_genres = len(set(genres))
+    genre_diversity = unique_genres / len(playlist) if playlist else 0.0
+
+    style_diversity = artist_diversity
+
+    return {"artist_diversity": round(artist_diversity, 3),
+            "style_diversity": round(style_diversity, 3),
+            "genre_diversity": round(genre_diversity, 3),
+            "unique_artists": unique_artists,
+            "unique_genres": unique_genres,
+            "total_tracks": len(playlist)}
+
+
+def calculate_novelty_score(playlist: List[Dict]) -> float:
+    # Calculate novelty based on popularity (lower popularity = higher novelty).
+    if not playlist:
+        return 0.0
+
+    novelty_scores = []
+    for track in playlist:
+        genre = track['reason']
+        matched_styles = map_genre_to_music_styles(genre, max_styles=1)
+        if matched_styles:
+            style = matched_styles[0]
+            popularity = DISCOGS_STYLE_POPULARITY.get(style, 1)
+            novelty = 1.0 / (1.0 + math.log10(popularity + 1))
+            novelty_scores.append(novelty)
+
+    return round(np.mean(novelty_scores), 3) if novelty_scores else 0.0
+
+
+def calculate_semantic_coherence(playlist: List[Dict], book_corpus: List[str]) -> float:
+    # Measure how well the playlist matches the book themes.
+    if not playlist or not book_corpus:
+        return 0.0
+
+    vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
+    book_vectors = vectorizer.fit_transform(book_corpus)
+    book_centroid = book_vectors.mean(axis=0)
+
+    playlist_text = " ".join([GENRE_DESCRIPTIONS.get(track['reason'], track['reason'])
+                              for track in playlist])
+
+    try:
+        playlist_vector = vectorizer.transform([playlist_text])
+        coherence = cosine_similarity(book_centroid, playlist_vector)[0][0]
+        return round(float(coherence), 3)
+    except:
+        return 0.0
+
+
+def calculate_coverage(matched_genres: List[str], all_keywords: List[Tuple[str, float]]) -> float:
+    # Calculate what percentage of important themes is covered.
+    if not all_keywords:
+        return 0.0
+
+    top_keywords = set([kw.lower() for kw, _ in all_keywords[:10]])
+
+    covered = 0
+    for genre in matched_genres:
+        genre_desc = GENRE_DESCRIPTIONS.get(genre, "").lower()
+        for keyword in top_keywords:
+            if keyword in genre_desc:
+                covered += 1
+                break
+
+    coverage = covered / len(set(matched_genres)) if matched_genres else 0.0
+    return round(coverage, 3)
+
+
+def evaluate_playlist_quality(playlist: List[Dict],
+                              book_corpus: List[str],
+                              global_keywords: List[Tuple[str, float]],
+                              matched_genres: List[str]) -> Dict:
+
+    # Comprehensive playlist evaluation combining multiple metrics.
+
+    print("\n" + "="*60)
+    print("EVALUATION METRICS")
+    print("="*60)
+
+    diversity = calculate_intra_list_diversity(playlist)
+    print("\n[DIVERSITY METRICS]")
+    print(f"  Artist Diversity: {diversity['artist_diversity']:.3f} ({diversity['unique_artists']}/{diversity['total_tracks']} unique)")
+    print(f"  Genre Diversity: {diversity['genre_diversity']:.3f} ({diversity['unique_genres']} genres)")
+    print(f"  Style Diversity: {diversity['style_diversity']:.3f}")
+
+    novelty = calculate_novelty_score(playlist)
+    print(f"\n[NOVELTY SCORE]")
+    print(f"  Novelty: {novelty:.3f} (0=mainstream, 1=obscure)")
+
+    coherence = calculate_semantic_coherence(playlist, book_corpus)
+    print(f"\n[SEMANTIC COHERENCE]")
+    print(f"  Book-Music Relevance: {coherence:.3f} (cosine similarity)")
+
+    coverage = calculate_coverage(matched_genres, global_keywords)
+    print(f"\n[THEME COVERAGE]")
+    print(f"  Keyword Coverage: {coverage:.3f}")
+
+    genre_dist = Counter([track['reason'] for track in playlist])
+    print(f"\n[GENRE DISTRIBUTION]")
+    for genre, count in genre_dist.most_common():
+        print(f"  {genre}: {count} tracks ({count/len(playlist)*100:.1f}%)")
+
+    overall_score = (diversity['artist_diversity'] * 0.25 +
+                     coherence * 0.40 +
+                     novelty * 0.20 +
+                     coverage * 0.15)
+
+    print(f"\n[OVERALL QUALITY SCORE]")
+    print(f"  Composite Score: {overall_score:.3f}/1.0")
+    print(f"  (40% relevance + 25% diversity + 20% novelty + 15% coverage)")
+
+    print("="*60)
+
+    return {"diversity": diversity,
+            "novelty": novelty,
+            "coherence": coherence,
+            "coverage": coverage,
+            "overall_score": round(overall_score, 3),
+            "genre_distribution": dict(genre_dist)}
+
+
+def detailed_book_music_alignment(chosen_books: List[Dict],
+                                  playlist: List[Dict],
+                                  global_keywords: List[Tuple[str, float]]) -> None:
+
+    # Detailed analysis of how each book maps to music tracks.
+
+    print("\n" + "="*60)
+    print("DETAILED BOOK-TO-MUSIC ALIGNMENT")
+    print("="*60)
+
+    titles, corpus = build_book_corpus(chosen_books)
+
+    vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), max_features=100)
+    book_vectors = vectorizer.fit_transform(corpus)
+
+    tracks_by_genre = {}
+    for track in playlist:
+        genre = track['reason']
+        if genre not in tracks_by_genre:
+            tracks_by_genre[genre] = []
+        tracks_by_genre[genre].append(track)
+
+    for idx, (title, book_vec) in enumerate(zip(titles, book_vectors)):
+        print(f"\n[BOOK {idx+1}: {title}]")
+
+        genre_similarities = {}
+        for genre in tracks_by_genre.keys():
+            genre_desc = GENRE_DESCRIPTIONS.get(genre, genre)
+            try:
+                genre_vec = vectorizer.transform([genre_desc])
+                similarity = cosine_similarity(book_vec, genre_vec)[0][0]
+                genre_similarities[genre] = similarity
+            except:
+                genre_similarities[genre] = 0.0
+
+        sorted_genres = sorted(genre_similarities.items(), key=lambda x: x[1], reverse=True)
+        print("  Top matching genres:")
+        for genre, sim in sorted_genres[:3]:
+            track_count = len(tracks_by_genre.get(genre, []))
+            print(f"    {genre}: {sim:.3f} similarity ({track_count} tracks)")
+
+    print("="*60)
+
+
 def book_commonalities(chosen_books: List[Dict]) -> None:
     # Main workflow: analyse books and generate playlist.
     print("\n" + "="*60)
@@ -351,6 +530,7 @@ def book_commonalities(chosen_books: List[Dict]) -> None:
         for j in range(i + 1, len(titles)):
             print(f"  {titles[i]} ↔ {titles[j]}: {sim[i, j]:.2f}")
 
+    genres = pick_main_genres(global_keywords, max_genres=3)
     playlist = build_playlist_from_commonalities(global_keywords, total_tracks=15)
 
     print("\n" + "="*60)
@@ -367,6 +547,23 @@ def book_commonalities(chosen_books: List[Dict]) -> None:
     else:
         print("No tracks found")
     print("="*60)
+
+    if playlist:
+        eval_results = evaluate_playlist_quality(playlist, corpus, global_keywords, genres)
+        detailed_book_music_alignment(chosen_books, playlist, global_keywords)
+
+        save_results = input("\nSave evaluation results to JSON? (y/n): ")
+        if save_results.lower() == 'y':
+            output = {"books": titles,
+                      "keywords": [{"keyword": kw, "score": score} for kw, score in global_keywords[:10]],
+                      "matched_genres": genres,
+                      "evaluation": eval_results,
+                      "playlist": playlist}
+
+            filename = f"evaluation_{int(time.time())}.json"
+            with open(filename, 'w') as f:
+                json.dump(output, f, indent=2)
+            print(f"Results saved to {filename}")
 
 def main():
     try:
