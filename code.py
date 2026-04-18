@@ -5,12 +5,15 @@ import math
 import pandas as pd
 import numpy as np
 import discogs_client
-from typing import List, Dict, Tuple, Set
-from collections import Counter
+from typing import List, Dict, Tuple
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Configuration
+
+start_time = time.time()
+cpu_start_time = time.process_time()
+
 DISCOGS_USER_TOKEN = os.getenv("DISCOGS_USER_TOKEN", "TwhKkMPvpWPwyZTsRCoPHHcabLZJJYddnKxmrXne")
 RATE_LIMIT_BUFFER = 2
 MIN_SLEEP_SECONDS = 1.0
@@ -22,18 +25,6 @@ books_file = pd.read_excel('Backup_Books.xlsx')
 d = discogs_client.Client("BookPlaylistApp/1.0", user_token=DISCOGS_USER_TOKEN)
 print(f"Loaded {len(books_file)} books\n")
 
-def _respect_rate_limit(response):
-    # Handle Discogs API rate limiting.
-    headers = getattr(response, 'headers', {}) or {}
-    try:
-        remaining = int(headers.get('X-Discogs-Ratelimit-Remaining', 0))
-        if remaining <= RATE_LIMIT_BUFFER:
-            print("Approaching rate limit, waiting 60 seconds...")
-            time.sleep(60)
-            return
-    except (TypeError, ValueError):
-        pass
-    time.sleep(MIN_SLEEP_SECONDS)
 
 # Genre descriptions for semantic matching
 GENRE_DESCRIPTIONS = {"science fiction": "space alien robot future technology planet android "
@@ -73,6 +64,19 @@ print("Building genre matcher...")
 genre_vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
 genre_names = list(GENRE_DESCRIPTIONS.keys())
 genre_tfidf_matrix = genre_vectorizer.fit_transform(list(GENRE_DESCRIPTIONS.values()))
+
+def _respect_rate_limit(response):
+    # Handle Discogs API rate limiting.
+    headers = getattr(response, 'headers', {}) or {}
+    try:
+        remaining = int(headers.get('X-Discogs-Ratelimit-Remaining', 0))
+        if remaining <= RATE_LIMIT_BUFFER:
+            print("Approaching rate limit, waiting 60 seconds...")
+            time.sleep(60)
+            return
+    except (TypeError, ValueError):
+        pass
+    time.sleep(MIN_SLEEP_SECONDS)
 
 def fetch_all_discogs_styles(cache_file=STYLES_CACHE_FILE, force_refresh=False):
     # Fetch all music styles from Discogs API with caching.
@@ -380,29 +384,8 @@ def calculate_semantic_coherence(playlist: List[Dict], book_corpus: List[str]) -
         return 0.0
 
 
-def calculate_coverage(matched_genres: List[str], all_keywords: List[Tuple[str, float]]) -> float:
-    # Calculate what percentage of important themes is covered.
-    if not all_keywords:
-        return 0.0
-
-    top_keywords = set([kw.lower() for kw, _ in all_keywords[:10]])
-
-    covered = 0
-    for genre in matched_genres:
-        genre_desc = GENRE_DESCRIPTIONS.get(genre, "").lower()
-        for keyword in top_keywords:
-            if keyword in genre_desc:
-                covered += 1
-                break
-
-    coverage = covered / len(set(matched_genres)) if matched_genres else 0.0
-    return round(coverage, 3)
-
-
 def evaluate_playlist_quality(playlist: List[Dict],
-                              book_corpus: List[str],
-                              global_keywords: List[Tuple[str, float]],
-                              matched_genres: List[str]) -> Dict:
+                              book_corpus: List[str]) -> Dict:
 
     # Comprehensive playlist evaluation combining multiple metrics.
 
@@ -424,32 +407,20 @@ def evaluate_playlist_quality(playlist: List[Dict],
     print(f"\n[SEMANTIC COHERENCE]")
     print(f"  Book-Music Relevance: {coherence:.3f} (cosine similarity)")
 
-    coverage = calculate_coverage(matched_genres, global_keywords)
-    print(f"\n[THEME COVERAGE]")
-    print(f"  Keyword Coverage: {coverage:.3f}")
-
-    genre_dist = Counter([track['reason'] for track in playlist])
-    print(f"\n[GENRE DISTRIBUTION]")
-    for genre, count in genre_dist.most_common():
-        print(f"  {genre}: {count} tracks ({count/len(playlist)*100:.1f}%)")
-
-    overall_score = (diversity['artist_diversity'] * 0.25 +
+    overall_score = (diversity['artist_diversity'] * 0.35 +
                      coherence * 0.40 +
-                     novelty * 0.20 +
-                     coverage * 0.15)
+                     novelty * 0.25)
 
     print(f"\n[OVERALL QUALITY SCORE]")
     print(f"  Composite Score: {overall_score:.3f}/1.0")
-    print(f"  (40% relevance + 25% diversity + 20% novelty + 15% coverage)")
+    print(f"  (40% relevance + 35% diversity + 25% novelty)")
 
     print("="*60)
 
     return {"diversity": diversity,
             "novelty": novelty,
             "coherence": coherence,
-            "coverage": coverage,
-            "overall_score": round(overall_score, 3),
-            "genre_distribution": dict(genre_dist)}
+            "overall_score": round(overall_score, 3)}
 
 
 def detailed_book_music_alignment(chosen_books: List[Dict],
@@ -503,7 +474,7 @@ def book_commonalities(chosen_books: List[Dict]) -> None:
     print("="*60)
 
     titles, corpus = build_book_corpus(chosen_books)
-    if len(corpus) < 2:
+    if len(corpus) < 2 and len(corpus) <= 5:
         print("Need at least 2 books")
         return
 
@@ -549,7 +520,7 @@ def book_commonalities(chosen_books: List[Dict]) -> None:
     print("="*60)
 
     if playlist:
-        eval_results = evaluate_playlist_quality(playlist, corpus, global_keywords, genres)
+        eval_results = evaluate_playlist_quality(playlist, corpus)
         detailed_book_music_alignment(chosen_books, playlist, global_keywords)
 
         save_results = input("\nSave evaluation results to JSON? (y/n): ")
@@ -592,5 +563,9 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+    end_time = time.time()
+    cpu_end_time = time.process_time()
+    total = (start_time - end_time) / 60
+    cpu_total = (cpu_end_time - cpu_start_time) / 60
+    print(f"Total time: {total:.2f} minutes , CPU time: {cpu_total:.2f} minutes")
 
