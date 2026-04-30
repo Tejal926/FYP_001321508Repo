@@ -10,16 +10,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Configuration
-
 start_time = time.time()
-cpu_start_time = time.process_time()
 
 DISCOGS_USER_TOKEN = os.getenv("DISCOGS_USER_TOKEN", "TwhKkMPvpWPwyZTsRCoPHHcabLZJJYddnKxmrXne")
 RATE_LIMIT_BUFFER = 2
 MIN_SLEEP_SECONDS = 1.0
 STYLES_CACHE_FILE = "discogs_styles_cache.json"
 
-# Initialize
+# Initialise
 print("Loading books and Discogs client...")
 books_file = pd.read_excel('Backup_Books.xlsx')
 d = discogs_client.Client("BookPlaylistApp/1.0", user_token=DISCOGS_USER_TOKEN)
@@ -61,8 +59,8 @@ GENRE_DESCRIPTIONS = {"science fiction": "space alien robot future technology pl
 
 
 print("Building genre matcher...")
-genre_vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
 genre_names = list(GENRE_DESCRIPTIONS.keys())
+genre_vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
 genre_tfidf_matrix = genre_vectorizer.fit_transform(list(GENRE_DESCRIPTIONS.values()))
 
 def _respect_rate_limit(response):
@@ -323,7 +321,7 @@ def build_playlist_from_commonalities(global_keywords, total_tracks: int = 15):
 
     return playlist[:total_tracks]
 
-def calculate_intra_list_diversity(playlist: List[Dict]) -> Dict[str, float]:
+def calculate_list_diversity(playlist: List[Dict]) -> Dict[str, float]:
     # Calculate diversity metrics for the playlist.
     if not playlist:
         return {"artist_diversity": 0.0, "style_diversity": 0.0, "genre_diversity": 0.0}
@@ -393,9 +391,10 @@ def evaluate_playlist_quality(playlist: List[Dict],
     print("EVALUATION METRICS")
     print("="*60)
 
-    diversity = calculate_intra_list_diversity(playlist)
+    diversity = calculate_list_diversity(playlist)
     print("\n[DIVERSITY METRICS]")
-    print(f"  Artist Diversity: {diversity['artist_diversity']:.3f} ({diversity['unique_artists']}/{diversity['total_tracks']} unique)")
+    print(f"  Artist Diversity: {diversity['artist_diversity']:.3f} "
+          f"({diversity['unique_artists']}/{diversity['total_tracks']} unique)")
     print(f"  Genre Diversity: {diversity['genre_diversity']:.3f} ({diversity['unique_genres']} genres)")
     print(f"  Style Diversity: {diversity['style_diversity']:.3f}")
 
@@ -467,7 +466,7 @@ def detailed_book_music_alignment(chosen_books: List[Dict],
     print("="*60)
 
 
-def book_commonalities(chosen_books: List[Dict]) -> None:
+def run(chosen_books: List[Dict]) -> None:
     # Main workflow: analyse books and generate playlist.
     print("\n" + "="*60)
     print("ANALYSING BOOKS")
@@ -542,7 +541,7 @@ def main():
         for idx, row in books_file.iterrows():
             print(f"{idx + 1}. {row['Full Title']}")
 
-        books_num = int(input("\nHow many books? "))
+        books_num = int(input("\nHow many books? (3-5)"))
         chosen_rows = []
         for i in range(books_num):
             while True:
@@ -556,7 +555,7 @@ def main():
                 except ValueError:
                     print("Enter a number")
 
-        book_commonalities(chosen_rows)
+        run(chosen_rows)
 
     except Exception as e:
         print(f"[ERROR] {e}")
@@ -564,8 +563,7 @@ def main():
 if __name__ == "__main__":
     main()
     end_time = time.time()
-    cpu_end_time = time.process_time()
     total = (start_time - end_time) / 60
-    cpu_total = (cpu_end_time - cpu_start_time) / 60
-    print(f"Total time: {total:.2f} minutes , CPU time: {cpu_total:.2f} minutes")
+    print(f"Total time: {total:.2f} minutes")
+
 
