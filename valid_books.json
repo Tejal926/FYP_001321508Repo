@@ -1,0 +1,86 @@
+[
+    {
+        "title": "The Illustrated Fly-Fisher's Text Book; a Complete Guide to the Science of Fly-Fishing for Salmon, Trout, Grayling, &C",
+        "title_long": "The Illustrated Fly-Fisher's Text Book; a Complete Guide to the Science of Fly-Fishing for Salmon, Trout, Grayling, &C",
+        "isbn": "9781362946359",
+        "isbn13": "9781362946359",
+        "isbn10": "1362946354",
+        "binding": "Paperback",
+        "publisher": "Creative Media Partners, LLC",
+        "language": "en",
+        "date_published": "2016-08-26",
+        "pages": 332,
+        "dimensions": "Height: 9.21 Inches, Length: 6.14 Inches, Weight: 1.02955876354 pounds, Width: 0.69 Inches",
+        "dimensions_structured": {
+            "length": {
+                "value": 6.14,
+                "unit": "inches"
+            },
+            "width": {
+                "value": 0.69,
+                "unit": "inches"
+            },
+            "weight": {
+                "value": 1.02955876354,
+                "unit": "pounds"
+            },
+            "height": {
+                "value": 9.21,
+                "unit": "inches"
+            }
+        },
+        "image": "https://images.isbndb.com/covers/6946923482673.jpg",
+        "image_original": "https://images.isbndb.com/covers/original/6946923482673.jpg?key=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2lzYm5kYi5jb20iLCJhdWQiOiJodHRwczovL2lzYm5kYi5jb20iLCJleHAiOjE3Njk2MjQ1NjV9.9q5RTYpMninSuCc4i79QWutM-mg-teNsTPVCVFdRRxs",
+        "msrp": 16.95,
+        "synopsis": "<p>This work has been selected by scholars as being culturally important, and is part of the knowledge base of civilization as we know it. This work was reproduced from the original artifact, and remains as true to the original work as possible. Therefore, you will see the original copyright references, library stamps (as most of these works have been housed in our most important libraries around the world), and other notations in the work.</p><p>This work is in the public domain in the United States of America, and possibly other nations. Within the United States, you may freely copy and distribute this work, as no entity (individual or corporate) has a copyright on the body of the work.</p><p>As a reproduction of a historical artifact, this work may contain missing or blurred pages, poor pictures, errant marks, etc. Scholars believe, and we concur, that this work is important enough to be preserved, reproduced, and made generally available to the public. We appreciate your support of the preservation process, and thank you for being an important part of keeping this knowledge alive and relevant.</p>",
+        "authors": [
+            "Edward 1804-1863 Chitty"
+        ],
+        "subjects": [
+            "History"
+        ],
+        "other_isbns": []
+    },
+    {
+        "title": "The British Quarterly Review",
+        "title_long": "The British Quarterly Review",
+        "isbn": "9781010480211",
+        "isbn13": "9781010480211",
+        "isbn10": "1010480219",
+        "binding": "Hardcover",
+        "publisher": "Creative Media Partners, LLC",
+        "language": "en",
+        "date_published": "2019-03-21",
+        "pages": 652,
+        "dimensions": "Height: 9.21 inches, Length: 6.14 Inches, Weight: 2.38981092008 Pounds, Width: 1.38 inches",
+        "dimensions_structured": {
+            "length": {
+                "value": 6.14,
+                "unit": "inches"
+            },
+            "width": {
+                "value": 1.38,
+                "unit": "inches"
+            },
+            "weight": {
+                "value": 2.38981092008,
+                "unit": "pounds"
+            },
+            "height": {
+                "value": 9.21,
+                "unit": "inches"
+            }
+        },
+        "image": "https://images.isbndb.com/covers/21094983482547.jpg",
+        "image_original": "https://images.isbndb.com/covers/original/21094983482547.jpg?key=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2lzYm5kYi5jb20iLCJhdWQiOiJodHRwczovL2lzYm5kYi5jb20iLCJleHAiOjE3Njk2MjQ2MDB9.yth_SyZALddF2Sz5wqqOgvNUzggjvgSJzNPvi9rjyx4",
+        "msrp": 31.95,
+        "synopsis": "<p>This work has been selected by scholars as being culturally important, and is part of the knowledge base of civilization as we know it. This work was reproduced from the original artifact, and remains as true to the original work as possible. Therefore, you will see the original copyright references, library stamps (as most of these works have been housed in our most important libraries around the world), and other notations in the work.</p> <p>This work is in the public domain in the United States of America, and possibly other nations. Within the United States, you may freely copy and distribute this work, as no entity (individual or corporate) has a copyright on the body of the work.</p> <p>As a reproduction of a historical artifact, this work may contain missing or blurred pages, poor pictures, errant marks, etc. Scholars believe, and we concur, that this work is important enough to be preserved, reproduced, and made generally available to the public. We appreciate your support of the preservation process, and thank you for being an important part of keeping this knowledge alive and relevant.</p>",
+        "authors": [
+            "Anonymous"
+        ],
+        "subjects": [
+            "History"
+        ],
+        "other_isbns": []
+    }
+]
